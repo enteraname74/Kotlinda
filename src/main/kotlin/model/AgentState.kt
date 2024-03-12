@@ -15,8 +15,22 @@ class AgentState {
      */
     fun get(variableName: String) = variables.find { it.name == variableName }
 
-    fun add(variable: Variable) = variables.add(variable)
-    fun addAll(vars: List<Variable>) = variables.addAll(vars)
+    private fun add(variable: Variable) {
+        val index = variables.indexOfFirst { it.name == variable.name }
+
+        if (index == -1) variables.add(variable)
+        else variables[0] = variable
+
+    }
+    fun addAll(vars: List<Variable>) {
+        vars.forEach {
+            add(it)
+        }
+    }
 
     fun getAllVariables() = variables
+
+    override fun toString(): String {
+        return "AgentState(variables = $variables)"
+    }
 }

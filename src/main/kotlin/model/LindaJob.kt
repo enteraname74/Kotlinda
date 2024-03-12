@@ -17,7 +17,6 @@ data class LindaJob(
         get() = job?.isCompleted == true
 
     fun cancel() {
-        println("A JOB WAS CANCEL")
         job?.cancel()
     }
 

@@ -18,7 +18,7 @@ sealed class TupleTemplate(
 
         if (other !is TupleTemplate) return false
 
-        val sameName = name == other.name
+        val sameName = (name == other.name) || (name.isEmpty() || other.name.isEmpty())
         val sameType = type == other.type
 
         val sameElement = sameType && sameName
@@ -41,7 +41,11 @@ class ReadVariableTupleTemplate(
 ): TupleTemplate(
     name = name,
     type = type
-)
+) {
+    override fun toString(): String {
+        return "ReadVariableTupleTemplate(name = $name, variableName = $variableName, type = $type)"
+    }
+}
 
 /**
  * Tuple used for simple read operation.
@@ -52,7 +56,11 @@ class ReadSimpleTupleTemplate(
 ): TupleTemplate(
     name = name,
     type = type
-)
+) {
+    override fun toString(): String {
+        return "ReadSimpleTupleTemplate(name = $name, type = $type)"
+    }
+}
 
 /**
  * Tuple used to store a value.
@@ -64,7 +72,11 @@ class ValueTupleTemplate(
 ): TupleTemplate(
     name = name,
     type = type
-)
+) {
+    override fun toString(): String {
+        return "ValueTupleTemplate(name = $name, value = $value, type = $type)"
+    }
+}
 
 
 /**
@@ -98,6 +110,15 @@ fun s(name: String, type: KClass<out Any>) = ReadSimpleTupleTemplate(
  */
 fun v(name: String, value: Any, type: KClass<out Any>) = ValueTupleTemplate(
     name = name,
+    value = value,
+    type = type
+)
+
+/**
+ * Utility method for creating a ValueTupleTemplate.
+ */
+fun v(value: Any, type: KClass<out Any>) = ValueTupleTemplate(
+    name = "",
     value = value,
     type = type
 )

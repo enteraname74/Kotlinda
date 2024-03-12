@@ -10,7 +10,7 @@ data class Variable(
     val type = value::class
 
     override fun toString(): String {
-        return "$value"
+        return "Variable(name = $name, value = $value)"
     }
 }
 
