@@ -13,11 +13,18 @@ suspend fun main() {
     val capteurCH4Job = buildCapteur_CH4(ts)
     val capteurCOJob = buildCapteur_CO(ts)
     val pompeJob = buildPompe(ts)
+    val ventilateurJob = buildVentilateur(ts)
     val h2OHautJob = buildH2O_haut(ts)
     val commandePompeVentilateurJob = buildCommande_Pompe_Ventilateur(ts)
     val gazBasJob = buildGaz_bas(ts)
     val surveillanceGazHautJob = buildSurveillance_Gaz_Haut(ts)
     val h2OBasJob = buildH2O_Bas(ts)
+    val h2oAugmente = buildH2O_Augmente(ts)
+    val ch4Augmente = buildCH4_Augmente(ts)
+    val coAugmente = buildCO_Augmente(ts)
+    val h2oDiminue = buildH2O_Diminue(ts)
+    val ch4Diminue = buildCH4_Diminue(ts)
+    val coDiminue = buildCO_Diminue(ts)
 
     joinAll(
         capteurH2OJob,
@@ -28,11 +35,17 @@ suspend fun main() {
         commandePompeVentilateurJob,
         gazBasJob,
         surveillanceGazHautJob,
-        h2OBasJob
+        h2OBasJob,
+        h2oAugmente,
+        ch4Augmente,
+        coAugmente,
+        h2oDiminue,
+        ch4Diminue,
+        coDiminue,
     )
 }
 
-fun buildCapteur_H2O(ts: TupleSpace): Job {//
+fun buildCapteur_H2O(ts: TupleSpace): Job {
     return CoroutineScope(Dispatchers.IO).launch {
         Capteur_H2O() def {
             add(ts, T(s("niveau-H2O", string), v("valeur-H2O", valeur_H2O++, float)))
@@ -67,6 +80,19 @@ fun buildPompe(ts: TupleSpace): Job {
                 pop(ts, T(s("activation-pompe", string))).Pompe(activee)
             } + b {
                 pop(ts, T(s("desactivation-pompe", string))).Pompe(desactivee)
+            }
+        }
+    }
+}
+
+fun buildVentilateur(ts: TupleSpace): Job {
+    return CoroutineScope(Dispatchers.IO).launch {
+        Ventilateur(etat) def {
+            println("VENTILATEUR -- État du ventilateur: $state")
+            b {
+                pop(ts, T(s("activation-ventilateur", string))).Ventilateur(activee)
+            } + b {
+                pop(ts, T(s("desactivation-ventilateur", string))).Ventilateur(desactivee)
             }
         }
     }
@@ -142,14 +168,14 @@ fun buildSurveillance_Gaz_Haut(ts: TupleSpace): Job {
                 .read(ts, T(r("niveau-CO", "y", string)))
                 .b {
                     this[(v("x") >= seuil_CH4) v (v("y") >= seuil_CO)] {
-                        println("SURVEILLANCE GAZ HAUT -- Un des gazs a dépassé le niveau: ${v("x")} ${v("y")}")
+                        println("SURVEILLANCE GAZ HAUT -- Un des gaz a dépassé le niveau: ${v("x")} ${v("y")}")
                         out(ts, T(s("activation-ventilateur", string)))
                             .pop(ts, T(s("detection-gaz-haut", string)))
                             .Surveillance_Gaz_Haut(seuil_CH4, seuil_CO)
                     }
                 } + b {
                 this[(v("x") < seuil_CH4) `^` (v("y") < seuil_CO)] {
-                    println("SURVEILLANCE GAZ HAUT -- Les deux gazs sont bas: ${v("x")} ${v("y")}")
+                    println("SURVEILLANCE GAZ HAUT -- Les deux gaz sont bas: ${v("x")} ${v("y")}")
                     Surveillance_Gaz_Haut(seuil_CH4, seuil_CO)
                 }
             }
@@ -173,7 +199,7 @@ fun buildH2O_Bas(ts: TupleSpace): Job {
                     }
                 } + b {
                 this[v("x") >= seuil_H2O_bas] {
-                    println("H2O BAS -- Le nibeau d'eau est normal ${v("x")}")
+                    println("H2O BAS -- Le niveau d'eau est normal ${v("x")}")
                     H2O_Bas(seuil_H2O_bas)
                 }
             }
@@ -181,13 +207,46 @@ fun buildH2O_Bas(ts: TupleSpace): Job {
     }
 }
 
-// TODO: Lire d'abord les valeurs avant de décrémenter
+fun buildH2O_Augmente(ts: TupleSpace): Job {
+    return CoroutineScope(Dispatchers.IO).launch {
+        H2O_Augmente() def {
+            read(ts, T(s("desactivation-pompe", string)))
+                .read(ts, T(s("niveau-H2O", string), r("x", float)))
+                .add(ts, T(s("niveau-H2O", string), v("valeur-H2O", ((v("x")?.value) as Float) + 1.0, float)))
+                .H2O_Augmente()
+        }
+    }
+}
+
+fun buildCH4_Augmente(ts: TupleSpace): Job {
+    return CoroutineScope(Dispatchers.IO).launch {
+        CH4_Augmente() def {
+            read(ts, T(s("desactivation-ventilateur", string)))
+                .read(ts, T(s("niveau-CH4", string), r("x", float)))
+                .add(ts, T(s("niveau-CH4", string), v("valeur-CH4", ((v("x")?.value) as Float) + 1.0, float)))
+                .CH4_Augmente()
+        }
+    }
+}
+
+fun buildCO_Augmente(ts: TupleSpace): Job {
+    return CoroutineScope(Dispatchers.IO).launch {
+        CO_Augmente() def {
+            read(ts, T(s("desactivation-ventilateur", string)))
+                .read(ts, T(s("niveau-CO", string), r("x", float)))
+                .add(ts, T(s("niveau-CO", string), v("valeur-CO", ((v("x")?.value) as Float) + 1.0, float)))
+                .CO_Augmente()
+        }
+    }
+}
 
 fun buildH2O_Diminue(ts: TupleSpace): Job {
     return CoroutineScope(Dispatchers.IO).launch {
         H2O_Diminue() def {
             read(ts, T(s("activation-pompe", string)))
-                .add(ts, T(s("niveau-H2O", string), v("valeur-H2O", valeur_H2O--, float)))
+                .read(ts, T(s("niveau-H2O", string), r("x", float)))
+                .add(ts, T(s("niveau-H2O", string), v("valeur-H2O", ((v("x")?.value) as Float) - 1.0, float)))
+                .H2O_Diminue()
         }
     }
 }
@@ -196,7 +255,9 @@ fun buildCH4_Diminue(ts: TupleSpace): Job {
     return CoroutineScope(Dispatchers.IO).launch {
         CH4_Diminue() def {
             read(ts, T(s("activation-ventilateur", string)))
-                .add(ts, T(s("niveau-CH4", string), v("valeur-CH4", valeur_CH4--, float)))
+                .read(ts, T(s("niveau-CH4", string), r("x", float)))
+                .add(ts, T(s("niveau-CH4", string), v("valeur-CH4", ((v("x")?.value) as Float) - 1.0, float)))
+                .CH4_Diminue()
         }
     }
 }
@@ -205,7 +266,9 @@ fun buildCO_Diminue(ts: TupleSpace): Job {
     return CoroutineScope(Dispatchers.IO).launch {
         CO_Diminue() def {
             read(ts, T(s("activation-ventilateur", string)))
-                .add(ts, T(s("niveau-CO", string), v("valeur-CO", valeur_CO--, float)))
+                .read(ts, T(s("niveau-CO", string), r("x", float)))
+                .add(ts, T(s("niveau-CO", string), v("valeur-CO", ((v("x")?.value) as Float) - 1.0, float)))
+                .CO_Diminue()
         }
     }
 }

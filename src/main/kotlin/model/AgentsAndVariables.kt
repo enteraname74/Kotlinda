@@ -11,11 +11,15 @@ class Capteur_H2O(vararg variable: Variable) : Agent(*variable)
 class Capteur_CH4(vararg variable: Variable) : Agent(*variable)
 class Capteur_CO(vararg variable: Variable) : Agent(*variable)
 class Pompe(vararg variable: Variable) : Agent(*variable)
+class Ventilateur(vararg variable: Variable) : Agent(*variable)
 class H2O_Haut(vararg variable: Variable) : Agent(*variable)
 class Commande_Pompe_Ventilateur(vararg variable: Variable) : Agent(*variable)
 class Gaz_Bas(vararg variable: Variable) : Agent(*variable)
 class Surveillance_Gaz_Haut(vararg variable: Variable) : Agent(*variable)
 class H2O_Bas(vararg variable: Variable) : Agent(*variable)
+class H2O_Augmente(vararg variable: Variable) : Agent(*variable)
+class CH4_Augmente(vararg variable: Variable) : Agent(*variable)
+class CO_Augmente(vararg variable: Variable) : Agent(*variable)
 class H2O_Diminue(vararg variable: Variable) : Agent(*variable)
 class CH4_Diminue(vararg variable: Variable) : Agent(*variable)
 class CO_Diminue(vararg variable: Variable) : Agent(*variable)
@@ -42,6 +46,9 @@ fun Agent.Capteur_CO(vararg variable: Variable) = buildNewAgentForRec(this, vari
 @JvmName("PompeRec")
 fun Agent.Pompe(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
 
+@JvmName("VentilateurRec")
+fun Agent.Ventilateur(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
+
 @JvmName("H2O_HautRec")
 fun Agent.H2O_Haut(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
 
@@ -56,6 +63,15 @@ fun Agent.Surveillance_Gaz_Haut(vararg variable: Variable) = buildNewAgentForRec
 
 @JvmName("H2O_BasRec")
 fun Agent.H2O_Bas(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
+
+@JvmName("H2O_AugmenteRec")
+fun Agent.H2O_Augmente(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
+
+@JvmName("CH4_AugmenteRec")
+fun Agent.CH4_Augmente(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
+
+@JvmName("CO_AugmenteRec")
+fun Agent.CO_Augmente(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
 
 @JvmName("H2O_DiminueRec")
 fun Agent.H2O_Diminue(vararg variable: Variable) = buildNewAgentForRec(this, variable.asList())
